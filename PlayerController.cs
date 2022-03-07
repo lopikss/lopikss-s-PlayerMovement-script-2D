@@ -2,7 +2,6 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    // 
     [Header("Movement ---------------------------------------------------------------------------")]
     [SerializeField] [Range(0, 25f)] private float MovementSpeed = 2f;
     [SerializeField] [Range(0, 0.3f)] private float movementSmoothness = 0.05f;
@@ -15,7 +14,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] [Range(0f, 10f)] private float FallMultiplier = 2.5f;
     [SerializeField] [Range(0f, 10f)] private float LowJumpMultiplier = 2f;
 
-    [Header("ground checker ---------------------------------------------------------------------")]
+    [Header("Ground checker ---------------------------------------------------------------------")]
     [SerializeField] private Transform GroundCheckObject = null;
     [SerializeField] private bool boxCheck;
     [SerializeField] private bool cirleCheck;
@@ -26,13 +25,9 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private bool _isGrounded = false;
 
 
-
-
-
-    // private statements
     private float _movementDirection;
     private Vector3 _velocity = Vector3.zero;
-
+    
     private bool _isFacingRight = true;
     private bool _isJumping = false;
     private bool _doubleJump;
@@ -52,13 +47,8 @@ public class PlayerController : MonoBehaviour
         //Horizontal move input
         _movementDirection = Input.GetAxis("Horizontal");
 
-        //player flipper part
-        if (_movementDirection > 0 && !_isFacingRight)
-        {
-            FlipPlayer();
-        }
-
-        else if (_movementDirection < 0 && _isFacingRight)
+        //Player sprite flipper
+        if ((_movementDirection > 0 && !_isFacingRight) || (_movementDirection < 0 && _isFacingRight))
         {
             FlipPlayer();
         }
@@ -69,12 +59,11 @@ public class PlayerController : MonoBehaviour
             _doubleJump = true;
         }
 
-        // jump input
+        // Jump input handeler
         if (Input.GetButtonDown("Jump") && _isGrounded)
         {
             _isJumping = true;
         }
-
         else if (Input.GetButtonDown("Jump") && _doubleJump && doubleJump)
         {
             _isJumping = true;
@@ -94,39 +83,25 @@ public class PlayerController : MonoBehaviour
                 _rigidbody2D.velocity, targetVelocity, ref _velocity, movementSmoothness
             );
 
+
         // Jumping Part
         _isGrounded = false;
 
-
-        //box collider
+       
+        //Box collider
         if (boxCheck == true)
         {
             Collider2D[] colliders =
                 Physics2D.OverlapBoxAll(GroundCheckObject.position, new Vector2(boxWidth, boxHeight), 0f, WhatIsGround);
-
-
-            for (int i = 0; i < colliders.Length; i++)
-            {
-                if (colliders[i].gameObject != gameObject)
-                {
-                    _isGrounded = true;
-                }
-            }
+            if (colliders.Length > 0) _isGrounded = true;
         }
 
-        //circleCollider
+        //Circle collider
         if (cirleCheck == true)
         {
             Collider2D[] colliders =
                     Physics2D.OverlapCircleAll(GroundCheckObject.position, circleSize, WhatIsGround);
-
-            for (int i = 0; i < colliders.Length; i++)
-            {
-                if (colliders[i].gameObject != gameObject)
-                {
-                    _isGrounded = true;
-                }
-            }
+            if (colliders.Length > 0) _isGrounded = true;
         }
 
 
@@ -135,7 +110,6 @@ public class PlayerController : MonoBehaviour
             _rigidbody2D.AddForce(Vector2.up * JumpPower, ForceMode2D.Impulse);
             _isJumping = false;
         }
-
         if (_rigidbody2D.velocity.y < 0f)
         {
             _rigidbody2D.gravityScale = FallMultiplier;
@@ -156,7 +130,7 @@ public class PlayerController : MonoBehaviour
         transform.Rotate(0f, 180f, 0f);
     }
 
-    #region Debug
+    #region GizmosDraw
 
     private void OnDrawGizmos()
     {
