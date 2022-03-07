@@ -32,6 +32,8 @@ public class PlayerController : MonoBehaviour
     private bool _isJumping = false;
     private bool _doubleJump;
 
+    private Collider2D[] colliders;
+
 
     private Rigidbody2D _rigidbody2D;
 
@@ -91,16 +93,16 @@ public class PlayerController : MonoBehaviour
         //Box collider
         if (boxCheck == true)
         {
-            Collider2D[] colliders =
-                Physics2D.OverlapBoxAll(GroundCheckObject.position, new Vector2(boxWidth, boxHeight), 0f, WhatIsGround);
+            Collider2D[] colliders = Physics2D.OverlapBoxAll(GroundCheckObject.position, new Vector2(boxWidth, boxHeight), 0f, WhatIsGround);            
             if (colliders.Length > 0) _isGrounded = true;
         }
 
         //Circle collider
         if (cirleCheck == true)
         {
-            Collider2D[] colliders =
-                    Physics2D.OverlapCircleAll(GroundCheckObject.position, circleSize, WhatIsGround);
+            ContactFilter2D filter2D = new ContactFilter2D();
+            filter2D.SetLayerMask(WhatIsGround);
+            var numberOfColliders = Physics2D.OverlapCircle(GroundCheckObject.position, circleSize, filter2D, colliders);
             if (colliders.Length > 0) _isGrounded = true;
         }
 
