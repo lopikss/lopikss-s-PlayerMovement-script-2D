@@ -32,7 +32,7 @@ public class PlayerController : MonoBehaviour
     private bool _isJumping = false;
     private bool _doubleJump;
 
-    private Collider2D[] colliders;
+    private Collider2D[] colliders = new Collider2D[4];
 
 
     private Rigidbody2D _rigidbody2D;
