@@ -89,11 +89,14 @@ public class PlayerController : MonoBehaviour
         // Jumping Part
         _isGrounded = false;
 
-       
+
         //Box collider
         if (boxCheck == true)
         {
-            Collider2D[] colliders = Physics2D.OverlapBoxAll(GroundCheckObject.position, new Vector2(boxWidth, boxHeight), 0f, WhatIsGround);            
+            ContactFilter2D filter2D = new ContactFilter2D();
+            filter2D.SetLayerMask(WhatIsGround);
+
+            var numberOfColliders = Physics2D.OverlapBox(GroundCheckObject.position, new Vector2(boxWidth, boxHeight), 0f, filter2D, colliders);
             if (colliders.Length > 0) _isGrounded = true;
         }
 
