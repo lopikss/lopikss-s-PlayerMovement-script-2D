@@ -10,7 +10,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] [Range(0f, 25f)] private float JumpPower = 7f;
     [SerializeField] private bool allowDoubleJump;
     [SerializeField] [Range(0, 10)] private float doubleJumpPower = 7f;
-    [SerializeField] [Range(0, 10)] private int DoubleJumpAmount = 1;
+    [SerializeField] [Range(0, 5)] private int DoubleJumpAmount = 1;
 
     [Header("fall speed controller --------------------------------------------------------------")]
     [SerializeField] [Range(0f, 10f)] private float FallMultiplier = 2.5f;
@@ -30,14 +30,14 @@ public class PlayerController : MonoBehaviour
     private float _movementDirection;
     private Vector3 _velocity = Vector3.zero;
     
-    private bool _isFacingRight = true;
+    private bool isFacingRight = true;
     private bool isJumping = false;
     private bool isDoubleJumping;
 
     private int doubleJump;
 
 
-    private Collider2D[] colliders = new Collider2D[4];
+    readonly private Collider2D[] colliders = new Collider2D[4];
 
 
     private Rigidbody2D _rigidbody2D;
@@ -51,11 +51,11 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        //Horizontal move input
+        // porizontal move input
         _movementDirection = Input.GetAxis("Horizontal");
 
-        //Player sprite flipper
-        if ((_movementDirection > 0 && !_isFacingRight) || (_movementDirection < 0 && _isFacingRight))
+        // player sprite flipper
+        if ((_movementDirection > 0 && !isFacingRight) || (_movementDirection < 0 && isFacingRight))
         {
             FlipPlayer();
         }
@@ -71,7 +71,7 @@ public class PlayerController : MonoBehaviour
         {
             isJumping = true;
         }
-        // double jump handeler
+        // double jump input handeler
         else if (Input.GetButtonDown("Jump") && allowDoubleJump && doubleJump > 0)
         {
             isDoubleJumping = true;
@@ -80,19 +80,15 @@ public class PlayerController : MonoBehaviour
     }
 
 
-
     void FixedUpdate()
     {
-        // Moving Part
+        // makes player move (on horizontal axes only)
         Vector3 targetVelocity =
             new Vector2(_movementDirection * MovementSpeed, _rigidbody2D.velocity.y);
-        _rigidbody2D.velocity =
-            Vector3.SmoothDamp(
-                _rigidbody2D.velocity, targetVelocity, ref _velocity, movementSmoothness
-            );
+        _rigidbody2D.velocity = Vector3.SmoothDamp(_rigidbody2D.velocity, targetVelocity, ref _velocity, movementSmoothness);           
 
 
-        // jump part
+        // makes player jump
         _isGrounded = false;
 
         if (isJumping)
@@ -100,6 +96,15 @@ public class PlayerController : MonoBehaviour
             _rigidbody2D.AddForce(Vector2.up * JumpPower, ForceMode2D.Impulse);
             isJumping = false;
         }
+
+        // makes player double jump jump
+        if (isDoubleJumping)
+        {
+            _rigidbody2D.AddForce(Vector2.up * doubleJumpPower, ForceMode2D.Impulse);
+            isDoubleJumping = false;
+        }
+
+        // falling handeler
         if (_rigidbody2D.velocity.y < 0f)
         {
             _rigidbody2D.gravityScale = FallMultiplier;
@@ -111,13 +116,6 @@ public class PlayerController : MonoBehaviour
         else
         {
             _rigidbody2D.gravityScale = 1f;
-        }
-
-        // double jump part
-        if (isDoubleJumping)
-        {
-            _rigidbody2D.AddForce(Vector2.up * doubleJumpPower, ForceMode2D.Impulse);
-            isDoubleJumping = false;
         }
 
 
@@ -142,11 +140,10 @@ public class PlayerController : MonoBehaviour
 
     private void FlipPlayer()
     {
-        _isFacingRight = !_isFacingRight;
+        isFacingRight = !isFacingRight;
         transform.Rotate(0f, 180f, 0f);
     }
 
-    #region GizmosDraw
 
     private void OnDrawGizmos()
     {
@@ -163,5 +160,4 @@ public class PlayerController : MonoBehaviour
 
         }
     }
-    #endregion
 }
