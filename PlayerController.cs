@@ -9,6 +9,9 @@ public class PlayerController : MonoBehaviour
     [Header("Jumping-----------------------------------------------------------------------------")]
     [SerializeField] [Range(0f, 25f)] private float JumpPower = 7f;
     [SerializeField] private bool doubleJump = false;
+    [Range(0, 10)] public int doubleJumpCount = 1;
+    public int doubleJump__;
+
 
     [Header("fall speed controller --------------------------------------------------------------")]
     [SerializeField] [Range(0f, 10f)] private float FallMultiplier = 2.5f;
@@ -31,6 +34,7 @@ public class PlayerController : MonoBehaviour
     private bool _isFacingRight = true;
     private bool _isJumping = false;
     private bool _doubleJump;
+  
 
     private Collider2D[] colliders = new Collider2D[4];
 
@@ -59,6 +63,7 @@ public class PlayerController : MonoBehaviour
         if (_isGrounded)
         {
             _doubleJump = true;
+            doubleJump__ =+ doubleJumpCount;
         }
 
         // Jump input handeler
@@ -66,10 +71,10 @@ public class PlayerController : MonoBehaviour
         {
             _isJumping = true;
         }
-        else if (Input.GetButtonDown("Jump") && _doubleJump && doubleJump)
+        else if (Input.GetButtonDown("Jump") && doubleJump && doubleJump__ > 0)
         {
             _isJumping = true;
-            _doubleJump = false;
+            --doubleJump__;
         }
     }
 
@@ -97,7 +102,7 @@ public class PlayerController : MonoBehaviour
             filter2D.SetLayerMask(WhatIsGround);
 
             var numberOfColliders = Physics2D.OverlapBox(GroundCheckObject.position, new Vector2(boxWidth, boxHeight), 0f, filter2D, colliders);
-            if (colliders.Length > 0) _isGrounded = true;
+            if (numberOfColliders > 0) _isGrounded = true;
         }
 
         //Circle collider
@@ -106,7 +111,7 @@ public class PlayerController : MonoBehaviour
             ContactFilter2D filter2D = new ContactFilter2D();
             filter2D.SetLayerMask(WhatIsGround);
             var numberOfColliders = Physics2D.OverlapCircle(GroundCheckObject.position, circleSize, filter2D, colliders);
-            if (colliders.Length > 0) _isGrounded = true;
+            if (numberOfColliders > 0) _isGrounded = true;
         }
 
 
