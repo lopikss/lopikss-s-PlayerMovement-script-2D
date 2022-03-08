@@ -8,10 +8,9 @@ public class PlayerController : MonoBehaviour
 
     [Header("Jumping-----------------------------------------------------------------------------")]
     [SerializeField] [Range(0f, 25f)] private float JumpPower = 7f;
-    [SerializeField] private bool doubleJump = false;
-    [Range(0, 10)] public int doubleJumpCount = 1;
-    public int doubleJump__;
-
+    [SerializeField] private bool allowDoubleJump;
+    [SerializeField] [Range(0, 10)] private float doubleJumpPower = 7f;
+    [SerializeField] [Range(0, 10)] private int DoubleJumpAmount = 1;
 
     [Header("fall speed controller --------------------------------------------------------------")]
     [SerializeField] [Range(0f, 10f)] private float FallMultiplier = 2.5f;
@@ -32,9 +31,11 @@ public class PlayerController : MonoBehaviour
     private Vector3 _velocity = Vector3.zero;
     
     private bool _isFacingRight = true;
-    private bool _isJumping = false;
-    private bool _doubleJump;
-  
+    private bool isJumping = false;
+    private bool isDoubleJumping;
+
+    private int doubleJump;
+
 
     private Collider2D[] colliders = new Collider2D[4];
 
@@ -62,19 +63,19 @@ public class PlayerController : MonoBehaviour
         //_isGrounded statements
         if (_isGrounded)
         {
-            _doubleJump = true;
-            doubleJump__ =+ doubleJumpCount;
+            doubleJump = DoubleJumpAmount;
         }
 
         // Jump input handeler
         if (Input.GetButtonDown("Jump") && _isGrounded)
         {
-            _isJumping = true;
+            isJumping = true;
         }
-        else if (Input.GetButtonDown("Jump") && doubleJump && doubleJump__ > 0)
+        // double jump handeler
+        else if (Input.GetButtonDown("Jump") && allowDoubleJump && doubleJump > 0)
         {
-            _isJumping = true;
-            --doubleJump__;
+            isDoubleJumping = true;
+            --doubleJump;
         }
     }
 
@@ -91,34 +92,13 @@ public class PlayerController : MonoBehaviour
             );
 
 
-        // Jumping Part
+        // jump part
         _isGrounded = false;
 
-
-        //Box collider
-        if (boxCheck == true)
-        {
-            ContactFilter2D filter2D = new ContactFilter2D();
-            filter2D.SetLayerMask(WhatIsGround);
-
-            var numberOfColliders = Physics2D.OverlapBox(GroundCheckObject.position, new Vector2(boxWidth, boxHeight), 0f, filter2D, colliders);
-            if (numberOfColliders > 0) _isGrounded = true;
-        }
-
-        //Circle collider
-        if (cirleCheck == true)
-        {
-            ContactFilter2D filter2D = new ContactFilter2D();
-            filter2D.SetLayerMask(WhatIsGround);
-            var numberOfColliders = Physics2D.OverlapCircle(GroundCheckObject.position, circleSize, filter2D, colliders);
-            if (numberOfColliders > 0) _isGrounded = true;
-        }
-
-
-        if (_isJumping)
+        if (isJumping)
         {
             _rigidbody2D.AddForce(Vector2.up * JumpPower, ForceMode2D.Impulse);
-            _isJumping = false;
+            isJumping = false;
         }
         if (_rigidbody2D.velocity.y < 0f)
         {
@@ -131,6 +111,32 @@ public class PlayerController : MonoBehaviour
         else
         {
             _rigidbody2D.gravityScale = 1f;
+        }
+
+        // double jump part
+        if (isDoubleJumping)
+        {
+            _rigidbody2D.AddForce(Vector2.up * doubleJumpPower, ForceMode2D.Impulse);
+            isDoubleJumping = false;
+        }
+
+
+        //Box collider
+        if (boxCheck == true)
+        {
+            ContactFilter2D filter2D = new ContactFilter2D();
+            filter2D.SetLayerMask(WhatIsGround);
+            var numberOfColliders = Physics2D.OverlapBox(GroundCheckObject.position, new Vector2(boxWidth, boxHeight), 0f, filter2D, colliders);
+            if (numberOfColliders > 0) _isGrounded = true;
+        }
+
+        //Circle collider
+        if (cirleCheck == true)
+        {
+            ContactFilter2D filter2D = new ContactFilter2D();
+            filter2D.SetLayerMask(WhatIsGround);
+            var numberOfColliders = Physics2D.OverlapCircle(GroundCheckObject.position, circleSize, filter2D, colliders);
+            if (numberOfColliders > 0) _isGrounded = true;
         }
     }
 
