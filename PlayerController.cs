@@ -5,8 +5,12 @@ public class PlayerController : MonoBehaviour
     [Header("Movement ---------------------------------------------------------------------------")]
     [SerializeField] [Range(0, 15f)] private float MovementSpeed = 2f;
     [SerializeField] [Range(0, 0.3f)] private float movementSmoothness = 0.05f;
+
+    [Header("Crouching---------------------------------------------------------------------------")]
     [SerializeField] private bool canPlayerCrouch;
     [SerializeField] [Range(0, 15f)] private float crouchSpeed = 1f;
+    [SerializeField] private Collider2D CrouchDisableCollider1;
+    [SerializeField] private Collider2D CrouchDisableCollider2;
 
     [Header("Jumping-----------------------------------------------------------------------------")]
     [SerializeField] [Range(0f, 25f)] private float JumpPower = 7f;
@@ -78,11 +82,31 @@ public class PlayerController : MonoBehaviour
             if (Input.GetButtonDown("Crouch") && _isGrounded)
             {
                 MovementSpeed -= crouchSpeed;
+                isCrouching = true;
             }
             if (Input.GetButtonUp("Crouch"))
             {
                 MovementSpeed += crouchSpeed;
+                isCrouching = false;
             }
+        }
+
+        // makes player hitbox smaller when crouching
+        if (isCrouching == true)
+        {
+            if (CrouchDisableCollider1 != null)
+                CrouchDisableCollider1.enabled = false;
+
+            if (CrouchDisableCollider2 != null)
+                CrouchDisableCollider2.enabled = false;
+        }
+        if (isCrouching == false)
+        {
+            if (CrouchDisableCollider1 != null)
+                CrouchDisableCollider1.enabled = true;
+
+            if (CrouchDisableCollider2 != null)
+                CrouchDisableCollider2.enabled = true;
         }
 
         // Jump input handeler
@@ -156,7 +180,6 @@ public class PlayerController : MonoBehaviour
             if (numberOfColliders > 0) _isGrounded = true;
         }
     }
-
     private void FlipPlayer()
     {
         isFacingRight = !isFacingRight;
