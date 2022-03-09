@@ -3,8 +3,10 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     [Header("Movement ---------------------------------------------------------------------------")]
-    [SerializeField] [Range(0, 25f)] private float MovementSpeed = 2f;
+    [SerializeField] [Range(0, 15f)] private float MovementSpeed = 2f;
     [SerializeField] [Range(0, 0.3f)] private float movementSmoothness = 0.05f;
+    [SerializeField] private bool canPlayerCrouch;
+    [SerializeField] [Range(0, 15f)] private float crouchSpeed = 1f;
 
     [Header("Jumping-----------------------------------------------------------------------------")]
     [SerializeField] [Range(0f, 25f)] private float JumpPower = 7f;
@@ -29,19 +31,22 @@ public class PlayerController : MonoBehaviour
 
     private float _movementDirection;
     private Vector3 _velocity = Vector3.zero;
-    
+
     private bool isFacingRight = true;
     private bool isJumping = false;
     private bool isDoubleJumping;
-
-    private int doubleJump;
-
+    public bool isCrouching;
 
     readonly private Collider2D[] colliders = new Collider2D[4];
 
-
     private Rigidbody2D _rigidbody2D;
 
+
+    // so stands fot script only 
+    private int so_doubleJump;
+
+
+   
 
 
     void Start()
@@ -63,7 +68,21 @@ public class PlayerController : MonoBehaviour
         //_isGrounded statements
         if (_isGrounded)
         {
-            doubleJump = DoubleJumpAmount;
+            so_doubleJump = DoubleJumpAmount;
+        }
+
+
+        // makes player crouch
+        if (canPlayerCrouch)
+        {
+            if (Input.GetButtonDown("Crouch") && _isGrounded)
+            {
+                MovementSpeed -= crouchSpeed;
+            }
+            if (Input.GetButtonUp("Crouch"))
+            {
+                MovementSpeed += crouchSpeed;
+            }
         }
 
         // Jump input handeler
@@ -72,10 +91,10 @@ public class PlayerController : MonoBehaviour
             isJumping = true;
         }
         // double jump input handeler
-        else if (Input.GetButtonDown("Jump") && allowDoubleJump && doubleJump > 0)
+        else if (Input.GetButtonDown("Jump") && allowDoubleJump && so_doubleJump > 0)
         {
             isDoubleJumping = true;
-            --doubleJump;
+            --so_doubleJump;
         }
     }
 
@@ -85,7 +104,7 @@ public class PlayerController : MonoBehaviour
         // makes player move (on horizontal axes only)
         Vector3 targetVelocity =
             new Vector2(_movementDirection * MovementSpeed, _rigidbody2D.velocity.y);
-        _rigidbody2D.velocity = Vector3.SmoothDamp(_rigidbody2D.velocity, targetVelocity, ref _velocity, movementSmoothness);           
+        _rigidbody2D.velocity = Vector3.SmoothDamp(_rigidbody2D.velocity, targetVelocity, ref _velocity, movementSmoothness);
 
 
         // makes player jump
