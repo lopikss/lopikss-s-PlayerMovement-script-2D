@@ -46,7 +46,7 @@ public class PlayerController : MonoBehaviour
     private bool isJumping = false;
     private bool isDoubleJumping;
     public bool isCrouching;
-    private bool isCrouching2;
+    private bool CanUnCrouch;
 
     readonly private Collider2D[] colliders = new Collider2D[4];
 
@@ -82,10 +82,13 @@ public class PlayerController : MonoBehaviour
             so_doubleJump = DoubleJumpAmount;
         }
 
+        if (Physics2D.OverlapBox(CielingCheck.position, new Vector2(boxWidths, boxHeights), WhatIsGround))
+
 
         // makes player crouch
         if (canPlayerCrouch)
         {
+
             if (Input.GetButtonDown("Crouch"))
             {
                 isCrouching = true;
@@ -97,6 +100,7 @@ public class PlayerController : MonoBehaviour
                 MovementSpeed /= crouchSpeed;
             }
         }
+
 
 
         // makes player hitbox smaller when crouching
@@ -187,12 +191,12 @@ public class PlayerController : MonoBehaviour
             if (numberOfColliders > 0) _isGrounded = true;
         }
     }
+
     private void FlipPlayer()
     {
         isFacingRight = !isFacingRight;
         transform.Rotate(0f, 180f, 0f);
     }
-
 
     private void OnDrawGizmos()
     {
@@ -209,7 +213,7 @@ public class PlayerController : MonoBehaviour
 
         }
 
-        if (CielingCheck != null && boxCheck == true)
+        if (CielingCheck != null)
         {
             Gizmos.color = Color.green;
             Gizmos.DrawWireCube(CielingCheck.position, new Vector3(boxWidths, boxHeights, 0f));
