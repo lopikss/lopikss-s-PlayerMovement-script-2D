@@ -3,13 +3,13 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     [Header("Movement")]
-    [SerializeField][Range(0, 15f)] private float _movementSpeed = 2f;
-    [SerializeField][Range(0, 0.3f)] private float _movementSmoothness = 0.05f;
+    [SerializeField][Range(0, 15f)] private float movementSpeed = 2f;
+    [SerializeField][Range(0, 0.3f)] private float movementSmoothness = 0.05f;
 
 
     [Header("Crouching")]
     [SerializeField] private bool _canPlayerCrouch;
-    [SerializeField][Range(0, 1f)] private float _crouchSpeedDecreaseFactor = 1f;
+    [SerializeField][Range(0, 1f)] private float _crouchSpeedDecreaser = 1f;
     [SerializeField] private Collider2D _crouchDisableCollider;
     [SerializeField] private Collider2D _crouchDisableCollider2;
 
@@ -52,7 +52,7 @@ public class PlayerController : MonoBehaviour
     private bool _isJumping = false;
     private bool _isMultipleJumping = false;
     private bool _isCrouching = false;
-    private bool _hasAlreadyDecreaseMovementSpeed = false;
+    private bool speedHasBeenDecreased = false;
     private bool disableJump = false;
 
     private readonly Collider2D[] colliders = new Collider2D[4];
@@ -92,22 +92,18 @@ public class PlayerController : MonoBehaviour
             if (Input.GetButton("Crouch"))
             {
                 _isCrouching = true;
-                if (!_hasAlreadyDecreaseMovementSpeed)
+                if (!speedHasBeenDecreased)
                 {
-                    _movementSpeed *= _crouchSpeedDecreaseFactor;
-                    _hasAlreadyDecreaseMovementSpeed = true;
+                    movementSpeed *= _crouchSpeedDecreaser;
+                    speedHasBeenDecreased = true;
                 }
             }
 
             // Check With Collider (Post-Process Input)
             ContactFilter2D filter2D = new ContactFilter2D();
             filter2D.SetLayerMask(_whatIsGround);
-
-            var numberOfColliders = Physics2D.OverlapBox(
-                _cielCheck.position,
-                new Vector2(_ceilBoxCheckWidth, _ceilBoxCheckHeight),
-                0f, filter2D, colliders
-            );
+            var numberOfColliders = Physics2D.OverlapBox(_cielCheck.position, new Vector2(_ceilBoxCheckWidth, _ceilBoxCheckHeight), 0f, filter2D, colliders);
+                   
 
             if (numberOfColliders > 0)
             {
@@ -163,11 +159,8 @@ public class PlayerController : MonoBehaviour
     {
         // Horizontal Axes Movement
         Vector3 targetVelocity =
-            new Vector2(_movementDirection * _movementSpeed, _rigidbody2D.velocity.y);
-        _rigidbody2D.velocity =
-            Vector3.SmoothDamp(
-                _rigidbody2D.velocity, targetVelocity, ref _velocity, _movementSmoothness
-            );
+            new Vector2(_movementDirection * movementSpeed, _rigidbody2D.velocity.y);
+        _rigidbody2D.velocity = Vector3.SmoothDamp(_rigidbody2D.velocity, targetVelocity, ref _velocity, movementSmoothness);
 
         // Jump
         _isGrounded = false;
@@ -207,9 +200,8 @@ public class PlayerController : MonoBehaviour
 
             var numberOfColliders = Physics2D.OverlapBox(
                 _groundCheck.position,
-                new Vector2(_groundBoxCheckWidth, _groundBoxCheckHeight),
-                0f, filter2D, colliders
-            );
+                new Vector2(_groundBoxCheckWidth, _groundBoxCheckHeight),0f, filter2D, colliders);
+                
 
             if (numberOfColliders > 0) _isGrounded = true;
         }
@@ -241,25 +233,21 @@ public class PlayerController : MonoBehaviour
         if (_groundCheck != null && _boxCheck == true)
         {
             Gizmos.color = Color.red;
-            Gizmos.DrawWireCube(
-                _groundCheck.position, new Vector3(_groundBoxCheckWidth, _groundBoxCheckHeight, 0f)
-            );
+            Gizmos.DrawWireCube(_groundCheck.position, new Vector3
+                (_groundBoxCheckWidth, _groundBoxCheckHeight, 0f));
         }
 
         if (_groundCheck != null && _cirleCheck == true)
         {
             Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(
-                _groundCheck.position, _groundCircleCheckRadius
-            );
+            Gizmos.DrawWireSphere(_groundCheck.position, _groundCircleCheckRadius);
         }
 
         if (_cielCheck != null)
         {
             Gizmos.color = Color.green;
-            Gizmos.DrawWireCube(
-                _cielCheck.position, new Vector3(_ceilBoxCheckWidth, _ceilBoxCheckHeight, 0f)
-            );
+            Gizmos.DrawWireCube(_cielCheck.position, new Vector3
+                (_ceilBoxCheckWidth, _ceilBoxCheckHeight, 0f));
         }
     }
 }
