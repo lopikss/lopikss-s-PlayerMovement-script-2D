@@ -2,63 +2,65 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    [Header("Movement ---------------------------------------------------------------------------")]
-    [SerializeField] [Range(0, 15f)] private float MovementSpeed = 2f;
-    [SerializeField] [Range(0, 0.3f)] private float movementSmoothness = 0.05f;
+    [Header("Movement")]
+    [SerializeField][Range(0, 15f)] private float _movementSpeed = 2f;
+    [SerializeField][Range(0, 0.3f)] private float _movementSmoothness = 0.05f;
 
-    [Header("Crouching---------------------------------------------------------------------------")]
-    [SerializeField] private bool canPlayerCrouch;
-    [SerializeField] [Range(0, 1f)] private float crouchSpeed = 1f;
-    [SerializeField] private Collider2D CrouchDisableCollider1;
-    [SerializeField] private Collider2D CrouchDisableCollider2;
 
-    [Header("Jumping-----------------------------------------------------------------------------")]
-    [SerializeField] [Range(0f, 25f)] private float JumpPower = 7f;
-    [SerializeField] private bool allowDoubleJump;
-    [SerializeField] [Range(0, 10)] private float doubleJumpPower = 7f;
-    [SerializeField] [Range(0, 5)] private int DoubleJumpAmount = 1;
+    [Header("Crouching")]
+    [SerializeField] private bool _canPlayerCrouch;
+    [SerializeField][Range(0, 1f)] private float _crouchSpeedDecreaseFactor = 1f;
+    [SerializeField] private Collider2D _crouchDisableCollider;
+    [SerializeField] private Collider2D _crouchDisableCollider2;
 
-    [Header("fall speed controller --------------------------------------------------------------")]
-    [SerializeField] [Range(0f, 10f)] private float FallMultiplier = 2.5f;
-    [SerializeField] [Range(0f, 10f)] private float LowJumpMultiplier = 2f;
 
-    [Header("Ground checker ---------------------------------------------------------------------")]
-    [SerializeField] private Transform GroundCheck = null;
-    [SerializeField] private bool boxCheck;
-    [SerializeField] private bool cirleCheck;
-    [SerializeField] [Range(0, 3f)] private float boxHeight = 1f;
-    [SerializeField] [Range(0, 3f)] private float boxWidth = 1f;
-    [SerializeField] [Range(0, 3f)] private float circleSize = 1f;
-    [SerializeField] private LayerMask WhatIsGround;
+    [Header("Jumping")]
+    [SerializeField] private bool _allowMultipleJump = false;
+    [SerializeField][Range(0f, 25f)] private float _firstJumpPower = 7f;
+    [SerializeField][Range(0, 10)] private float _multipleJumpPower = 7f;
+    [SerializeField][Range(0, 5)] private int _multipleJumpAmount = 1;
+
+
+    [Header("Fall Speed Controller")]
+    [SerializeField][Range(0f, 10f)] private float _fallMultiplier = 2.5f;
+    [SerializeField][Range(0f, 10f)] private float _lowJumpMultiplier = 2f;
+
+
+    [Header("Ground Checker")]
+    [SerializeField] private Transform _groundCheck = null;
+    [SerializeField] private bool _boxCheck;
+    [SerializeField] private bool _cirleCheck;
+    [SerializeField][Range(0, 3f)] private float _groundBoxCheckWidth = 1f;
+    [SerializeField][Range(0, 3f)] private float _groundBoxCheckHeight = 1f;
+    [SerializeField][Range(0, 3f)] private float _groundCircleCheckRadius = 1f;
+    [SerializeField] private LayerMask _whatIsGround;
+
+
+    [Header("Ciel Checker")]
+    [SerializeField] private Transform _cielCheck = null;
+    [SerializeField][Range(0, 3f)] private float _ceilBoxCheckWidth = 1f;
+    [SerializeField][Range(0, 3f)] private float _ceilBoxCheckHeight = 1f;
+
+    [Header("Temp Checks")]
     [SerializeField] private bool _isGrounded = false;
-
-    [Header("Cieling checker---------------------------------------------------------------------")]
-    [SerializeField] private Transform CielingCheck = null;
-    [SerializeField] [Range(0, 3f)] private float boxHeights = 1f;
-    [SerializeField] [Range(0, 3f)] private float boxWidths = 1f;
-    [SerializeField] private bool boxChecks;
 
 
     private float _movementDirection;
     private Vector3 _velocity = Vector3.zero;
 
-    private bool isFacingRight = true;
-    private bool isJumping = false;
-    private bool isDoubleJumping;
-    public bool isCrouching;
-    private bool CanUnCrouch;
+    private bool _isFacingRight = true;
+    private bool _isJumping = false;
+    private bool _isMultipleJumping = false;
+    private bool _isCrouching = false;
+    private bool _hasAlreadyDecreaseMovementSpeed = false;
+    private bool disableJump = false;
 
-    readonly private Collider2D[] colliders = new Collider2D[4];
+    private readonly Collider2D[] colliders = new Collider2D[4];
 
     private Rigidbody2D _rigidbody2D;
 
-
-    // so stands fot script only 
-    private int so_doubleJump;
-
-
-
-
+    // SO stands for "Script Only" 
+    private int _SO_multipleJump;
 
     void Start()
     {
@@ -67,157 +69,197 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        // porizontal move input
+        // Horizontal Movement Input
         _movementDirection = Input.GetAxis("Horizontal");
 
-        // player sprite flipper
-        if ((_movementDirection > 0 && !isFacingRight) || (_movementDirection < 0 && isFacingRight))
+        // Player Sprite Flip
+        if ((_movementDirection > 0 && !_isFacingRight) || (_movementDirection < 0 && _isFacingRight))
         {
             FlipPlayer();
         }
 
-        //_isGrounded statements
+        // Multiple Jump
         if (_isGrounded)
         {
-            so_doubleJump = DoubleJumpAmount;
+            _SO_multipleJump = _multipleJumpAmount;
         }
 
-        if (Physics2D.OverlapBox(CielingCheck.position, new Vector2(boxWidths, boxHeights), WhatIsGround))
-
-
-        // makes player crouch
-        if (canPlayerCrouch)
+        // Crouching Feature
+        if (_canPlayerCrouch)
         {
+            _isCrouching = false;
 
-            if (Input.GetButtonDown("Crouch"))
+            if (Input.GetButton("Crouch"))
             {
-                isCrouching = true;
-                MovementSpeed *= crouchSpeed;
+                _isCrouching = true;
+                if (!_hasAlreadyDecreaseMovementSpeed)
+                {
+                    _movementSpeed *= _crouchSpeedDecreaseFactor;
+                    _hasAlreadyDecreaseMovementSpeed = true;
+                }
             }
-            if (Input.GetButtonUp("Crouch"))
+
+            // Check With Collider (Post-Process Input)
+            ContactFilter2D filter2D = new ContactFilter2D();
+            filter2D.SetLayerMask(_whatIsGround);
+
+            var numberOfColliders = Physics2D.OverlapBox(
+                _cielCheck.position,
+                new Vector2(_ceilBoxCheckWidth, _ceilBoxCheckHeight),
+                0f, filter2D, colliders
+            );
+
+            if (numberOfColliders > 0)
             {
-                isCrouching = false;
-                MovementSpeed /= crouchSpeed;
+                _isCrouching = true;
+                disableJump = true;
+            }
+            else
+            {
+                disableJump = false;
+            }
+
+            // Makes Player's Hitbox Smaller While Crouching
+            if (_crouchDisableCollider != null)
+            {
+                if (_isCrouching)
+                {
+                    _crouchDisableCollider.enabled = false;
+                }
+                else
+                {
+                    _crouchDisableCollider.enabled = true;
+                }
+            }
+
+            if (_crouchDisableCollider2 != null)
+            {
+                if(_isCrouching)
+                {
+                    _crouchDisableCollider2.enabled = false;
+                }
+                else
+                {
+                    _crouchDisableCollider2.enabled = true;
+                }
             }
         }
 
-
-
-        // makes player hitbox smaller when crouching
-        if (isCrouching == true)
+        // Jump Input Handler
+        if (Input.GetButtonDown("Jump") && _isGrounded && disableJump == false)
         {
-            if (CrouchDisableCollider1 != null)
-                CrouchDisableCollider1.enabled = false;
-
-            if (CrouchDisableCollider2 != null)
-                CrouchDisableCollider2.enabled = false;
-        }
-        if (isCrouching == false)
-        {
-            if (CrouchDisableCollider1 != null)
-                CrouchDisableCollider1.enabled = true;
-
-            if (CrouchDisableCollider2 != null)
-                CrouchDisableCollider2.enabled = true;
+            _isJumping = true;
         }
 
-        // Jump input handeler
-        if (Input.GetButtonDown("Jump") && _isGrounded)
+        // Multiple Jump Input Handler
+        else if (Input.GetButtonDown("Jump") && _allowMultipleJump && _SO_multipleJump > 0)
         {
-            isJumping = true;
-        }
-        // double jump input handeler
-        else if (Input.GetButtonDown("Jump") && allowDoubleJump && so_doubleJump > 0)
-        {
-            isDoubleJumping = true;
-            --so_doubleJump;
+            _isMultipleJumping = true;
+            --_SO_multipleJump;
         }
     }
 
-
     void FixedUpdate()
     {
-        // makes player move (on horizontal axes only)
+        // Horizontal Axes Movement
         Vector3 targetVelocity =
-            new Vector2(_movementDirection * MovementSpeed, _rigidbody2D.velocity.y);
-        _rigidbody2D.velocity = Vector3.SmoothDamp(_rigidbody2D.velocity, targetVelocity, ref _velocity, movementSmoothness);
+            new Vector2(_movementDirection * _movementSpeed, _rigidbody2D.velocity.y);
+        _rigidbody2D.velocity =
+            Vector3.SmoothDamp(
+                _rigidbody2D.velocity, targetVelocity, ref _velocity, _movementSmoothness
+            );
 
-
-        // makes player jump
+        // Jump
         _isGrounded = false;
 
-        if (isJumping)
+        if (_isJumping)
         {
-            _rigidbody2D.AddForce(Vector2.up * JumpPower, ForceMode2D.Impulse);
-            isJumping = false;
+            _rigidbody2D.AddForce(Vector2.up * _firstJumpPower, ForceMode2D.Impulse);
+            _isJumping = false;
         }
 
-        // makes player double jump
-        if (isDoubleJumping)
+        // Multiple Jump
+        if (_isMultipleJumping)
         {
-            _rigidbody2D.AddForce(Vector2.up * doubleJumpPower, ForceMode2D.Impulse);
-            isDoubleJumping = false;
+            _rigidbody2D.AddForce(Vector2.up * _multipleJumpPower, ForceMode2D.Impulse);
+            _isMultipleJumping = false;
         }
 
-        // falling handeler
+        // Falling Handler
         if (_rigidbody2D.velocity.y < 0f)
         {
-            _rigidbody2D.gravityScale = FallMultiplier;
+            _rigidbody2D.gravityScale = _fallMultiplier;
         }
         else if (_rigidbody2D.velocity.y > 0f && !Input.GetButton("Jump"))
         {
-            _rigidbody2D.gravityScale = LowJumpMultiplier;
+            _rigidbody2D.gravityScale = _lowJumpMultiplier;
         }
         else
         {
             _rigidbody2D.gravityScale = 1f;
         }
 
-        //Box collider
-        if (boxCheck == true)
+        // Box Collider
+        if (_boxCheck == true)
         {
             ContactFilter2D filter2D = new ContactFilter2D();
-            filter2D.SetLayerMask(WhatIsGround);
-            var numberOfColliders = Physics2D.OverlapBox(GroundCheck.position, new Vector2(boxWidth, boxHeight), 0f, filter2D, colliders);
+            filter2D.SetLayerMask(_whatIsGround);
+
+            var numberOfColliders = Physics2D.OverlapBox(
+                _groundCheck.position,
+                new Vector2(_groundBoxCheckWidth, _groundBoxCheckHeight),
+                0f, filter2D, colliders
+            );
+
             if (numberOfColliders > 0) _isGrounded = true;
         }
 
-        //Circle collider
-        if (cirleCheck == true)
+        // Circle Collider
+        if (_cirleCheck == true)
         {
             ContactFilter2D filter2D = new ContactFilter2D();
-            filter2D.SetLayerMask(WhatIsGround);
-            var numberOfColliders = Physics2D.OverlapCircle(GroundCheck.position, circleSize, filter2D, colliders);
+            filter2D.SetLayerMask(_whatIsGround);
+
+            var numberOfColliders = Physics2D.OverlapCircle(
+                _groundCheck.position,
+                _groundCircleCheckRadius,
+                filter2D, colliders
+            );
+
             if (numberOfColliders > 0) _isGrounded = true;
         }
     }
 
     private void FlipPlayer()
     {
-        isFacingRight = !isFacingRight;
+        _isFacingRight = !_isFacingRight;
         transform.Rotate(0f, 180f, 0f);
     }
 
     private void OnDrawGizmos()
     {
-        if (GroundCheck != null && boxCheck == true)
+        if (_groundCheck != null && _boxCheck == true)
         {
             Gizmos.color = Color.red;
-            Gizmos.DrawWireCube(GroundCheck.position, new Vector3(boxWidth, boxHeight, 0f));
-
+            Gizmos.DrawWireCube(
+                _groundCheck.position, new Vector3(_groundBoxCheckWidth, _groundBoxCheckHeight, 0f)
+            );
         }
-        if (GroundCheck != null && cirleCheck == true)
+
+        if (_groundCheck != null && _cirleCheck == true)
         {
             Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(GroundCheck.position, circleSize);
-
+            Gizmos.DrawWireSphere(
+                _groundCheck.position, _groundCircleCheckRadius
+            );
         }
 
-        if (CielingCheck != null)
+        if (_cielCheck != null)
         {
             Gizmos.color = Color.green;
-            Gizmos.DrawWireCube(CielingCheck.position, new Vector3(boxWidths, boxHeights, 0f));
-
+            Gizmos.DrawWireCube(
+                _cielCheck.position, new Vector3(_ceilBoxCheckWidth, _ceilBoxCheckHeight, 0f)
+            );
         }
     }
 }
