@@ -3,43 +3,43 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     [Header("Movement")]
-    [SerializeField][Range(0, 15f)] private float movementSpeed = 2f;
-    [SerializeField][Range(0, 0.3f)] private float movementSmoothness = 0.05f;
+    [SerializeField] [Range(0, 15f)] private float movementSpeed = 2f;
+    [SerializeField] [Range(0, 0.3f)] private float movementSmoothness = 0.05f;
 
 
     [Header("Crouching")]
     [SerializeField] private bool _canPlayerCrouch;
-    [SerializeField][Range(0, 1f)] private float _crouchSpeedDecreaser = 1f;
+    [SerializeField] [Range(0, 1f)] private float _crouchSpeedDecreaser = 1f;
     [SerializeField] private Collider2D _crouchDisableCollider;
     [SerializeField] private Collider2D _crouchDisableCollider2;
 
 
     [Header("Jumping")]
     [SerializeField] private bool _allowMultipleJump = false;
-    [SerializeField][Range(0f, 25f)] private float _firstJumpPower = 7f;
-    [SerializeField][Range(0, 10)] private float _multipleJumpPower = 7f;
-    [SerializeField][Range(0, 5)] private int _multipleJumpAmount = 1;
+    [SerializeField] [Range(0f, 25f)] private float _firstJumpPower = 7f;
+    [SerializeField] [Range(0, 10)] private float _multipleJumpPower = 7f;
+    [SerializeField] [Range(0, 5)] private int _multipleJumpAmount = 1;
 
 
     [Header("Fall Speed Controller")]
-    [SerializeField][Range(0f, 10f)] private float _fallMultiplier = 2.5f;
-    [SerializeField][Range(0f, 10f)] private float _lowJumpMultiplier = 2f;
+    [SerializeField] [Range(0f, 10f)] private float _fallMultiplier = 2.5f;
+    [SerializeField] [Range(0f, 10f)] private float _lowJumpMultiplier = 2f;
 
 
     [Header("Ground Checker")]
     [SerializeField] private Transform _groundCheck = null;
     [SerializeField] private bool _boxCheck;
     [SerializeField] private bool _cirleCheck;
-    [SerializeField][Range(0, 3f)] private float _groundBoxCheckWidth = 1f;
-    [SerializeField][Range(0, 3f)] private float _groundBoxCheckHeight = 1f;
-    [SerializeField][Range(0, 3f)] private float _groundCircleCheckRadius = 1f;
+    [SerializeField] [Range(0, 3f)] private float _groundBoxCheckWidth = 1f;
+    [SerializeField] [Range(0, 3f)] private float _groundBoxCheckHeight = 1f;
+    [SerializeField] [Range(0, 3f)] private float _groundCircleCheckRadius = 1f;
     [SerializeField] private LayerMask _whatIsGround;
 
 
     [Header("Ciel Checker")]
     [SerializeField] private Transform _cielCheck = null;
-    [SerializeField][Range(0, 3f)] private float _ceilBoxCheckWidth = 1f;
-    [SerializeField][Range(0, 3f)] private float _ceilBoxCheckHeight = 1f;
+    [SerializeField] [Range(0, 3f)] private float _ceilBoxCheckWidth = 1f;
+    [SerializeField] [Range(0, 3f)] private float _ceilBoxCheckHeight = 1f;
 
     [Header("Temp Checks")]
     [SerializeField] private bool _isGrounded = false;
@@ -103,7 +103,13 @@ public class PlayerController : MonoBehaviour
             ContactFilter2D filter2D = new ContactFilter2D();
             filter2D.SetLayerMask(_whatIsGround);
             var numberOfColliders = Physics2D.OverlapBox(_cielCheck.position, new Vector2(_ceilBoxCheckWidth, _ceilBoxCheckHeight), 0f, filter2D, colliders);
-                   
+
+            if (!_isCrouching && speedHasBeenDecreased)
+            {
+                movementSpeed /= _crouchSpeedDecreaser;
+                speedHasBeenDecreased = false;
+            }
+
 
             if (numberOfColliders > 0)
             {
@@ -130,7 +136,7 @@ public class PlayerController : MonoBehaviour
 
             if (_crouchDisableCollider2 != null)
             {
-                if(_isCrouching)
+                if (_isCrouching)
                 {
                     _crouchDisableCollider2.enabled = false;
                 }
@@ -200,8 +206,8 @@ public class PlayerController : MonoBehaviour
 
             var numberOfColliders = Physics2D.OverlapBox(
                 _groundCheck.position,
-                new Vector2(_groundBoxCheckWidth, _groundBoxCheckHeight),0f, filter2D, colliders);
-                
+                new Vector2(_groundBoxCheckWidth, _groundBoxCheckHeight), 0f, filter2D, colliders);
+
 
             if (numberOfColliders > 0) _isGrounded = true;
         }
