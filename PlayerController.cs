@@ -7,6 +7,11 @@ public class PlayerController : MonoBehaviour
     [SerializeField] [Range(0, 0.3f)] private float movementSmoothness = 0.05f;
 
 
+    [Header("Running")]
+    [SerializeField] private bool canPlayerRun;
+    [SerializeField] [Range(0, 5f)] private float runSpeedMuliplier = 2f;
+
+
     [Header("Crouching")]
     [SerializeField] private bool canPlayerCrouch;
     [SerializeField] [Range(0, 1f)] private float crouchSpeedDecreaser = 1f;
@@ -53,7 +58,9 @@ public class PlayerController : MonoBehaviour
     private bool isMultipleJumping = false;
     private bool isCrouching = false;
     private bool speedHasBeenDecreased = false;
+    private bool runSpeedHasBeenApplied;
     private bool disableJump = false;
+
 
     private readonly Collider2D[] colliders = new Collider2D[4];
 
@@ -84,6 +91,24 @@ public class PlayerController : MonoBehaviour
             so_multipleJump = multipleJumpAmount;
         }
 
+        if (canPlayerRun)
+        {
+            if (Input.GetButtonDown("Run"))
+            {
+                movementSpeed *= runSpeedMuliplier;
+                runSpeedHasBeenApplied = true;
+                movementSmoothness += 0.05f;
+            }
+            if (Input.GetButtonUp("Run") && runSpeedHasBeenApplied)
+            {
+                movementSpeed /= runSpeedMuliplier;
+                runSpeedHasBeenApplied = false;
+                movementSmoothness -= 0.05f;
+            }
+        }
+
+
+
         // Crouching Feature
         if (canPlayerCrouch)
         {
@@ -99,11 +124,6 @@ public class PlayerController : MonoBehaviour
                 }
             }
 
-            // Check With Collider (Post-Process Input)
-            ContactFilter2D filter2D = new ContactFilter2D();
-            filter2D.SetLayerMask(whatIsGround);
-            var numberOfColliders = Physics2D.OverlapBox(cielCheck.position, new Vector2(ceilBoxCheckWidth, ceilBoxCheckHeight), 0f, filter2D, colliders);
-
             if (!isCrouching && speedHasBeenDecreased)
             {
                 movementSpeed /= crouchSpeedDecreaser;
@@ -111,16 +131,24 @@ public class PlayerController : MonoBehaviour
             }
 
 
-            if (numberOfColliders > 0)
+            // Check With Collider (Post-Process Input)
+            if (cielCheck != null)
             {
-                isCrouching = true;
-                disableJump = true;
-            }
-            else
-            {
-                disableJump = false;
-            }
+                ContactFilter2D filter2D = new ContactFilter2D();
+                filter2D.SetLayerMask(whatIsGround);
+                var numberOfColliders = Physics2D.OverlapBox(cielCheck.position, new Vector2(ceilBoxCheckWidth, ceilBoxCheckHeight), 0f, filter2D, colliders);
 
+
+                if (numberOfColliders > 0)
+                {
+                    isCrouching = true;
+                    disableJump = true;
+                }
+                else
+                {
+                    disableJump = false;
+                }
+            }
             // Makes Player's Hitbox Smaller While Crouching
             if (crouchDisableCollider != null)
             {
